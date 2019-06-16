@@ -1,6 +1,6 @@
 # Reconstucting RGB image by Convex model
 
-Use total variation method to create convex model for denoising, debluring, inpainting RGB images. 
+Use total variation method to create convex models for denoising, debluring, inpainting RGB images. 
 
 ## Getting Started
 ### Installing
