@@ -62,14 +62,16 @@ def algorithm(windowsize,img):
     #for i in range(w):
      #   for j in range(h):
     sumnoise=0
-    noise_index = np.array([[]])
+    rows = np.array([])
+    cols =  np.array([])
     for i in range(h-windowsize+1):
         for j in range(w-windowsize+1):
             if caculateT1(windowsize,(i,j),img[:,:,0],img[i,j,0]) and caculateT1(windowsize,(i,j),img[:,:,1],img[i,j,1]) and caculateT1(windowsize,(i,j),img[:,:,2],img[i,j,2]):
-                print(noise_index)
-                np.append(noise_index,[1,1])
+                #noise_index = np.append(noise_index,[[i + (windowsize/2),j + (windowsize/2)]])
+                rows = np.append(rows,[i + (windowsize/2)])
+                cols = np.append(cols,[j + (windowsize/2)])
                 sumnoise+=1
-    return noise_index    
+    return (rows,cols)     
     			
             
 

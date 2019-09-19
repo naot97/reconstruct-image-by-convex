@@ -19,10 +19,7 @@ class Inpaint(ROFImg):
         ori = self.get_rgb(self.fname)
         noise = self.get_text_data()
         #rows, cols = np.where((noise[:,:,0] == ori[:,:,0]) & (noise[:,:,1] == ori[:,:,1]) & (noise[:,:,2] == ori[:,:,2]))
-        noise_index = algorithm(5,ori)
-        print(noise_index.shape)
-        rows = noise_index[:,0]
-        cols = noise_index[:,1]
+        rows,cols = algorithm(5,ori)
         out = self.inpainting(noise,rows,cols)
         self.show_figure(ori,noise,out)
 
