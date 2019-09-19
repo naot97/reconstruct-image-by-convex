@@ -140,10 +140,9 @@ class ROFImg:
         self.init_size()
         return im[:self.M,:self.N]
 
-    def get_text_data(self):
-        original = self.get_rgb(self.fname)
+    def get_text_data(self,ori):
         text = self.load_text()
-        corrupted = original + text
+        corrupted = ori + text
         return corrupted
 
     def toeplitz(self,b, n):
