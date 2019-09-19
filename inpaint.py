@@ -4,6 +4,8 @@ import scipy.sparse as sparse
 import scipy.linalg as linalg
 from timeit import default_timer
 from utils import ROFImg
+from detectnoise import *
+
 class Inpaint(ROFImg):
     def __init__(self):
         ROFImg.__init__(self)
@@ -16,12 +18,17 @@ class Inpaint(ROFImg):
     def inpainting_simulate(self):
         ori = self.get_rgb(self.fname)
         noise = self.get_text_data()
-        rows, cols = np.where((noise[:,:,0] == ori[:,:,0]) & (noise[:,:,1] == ori[:,:,1]) & (noise[:,:,2] == ori[:,:,2]))
+        #rows, cols = np.where((noise[:,:,0] == ori[:,:,0]) & (noise[:,:,1] == ori[:,:,1]) & (noise[:,:,2] == ori[:,:,2]))
+        noise_index = algorithm(5,ori)
+        print(noise_index.shape)
+        rows = noise_index[:,0]
+        cols = noise_index[:,1]
         out = self.inpainting(noise,rows,cols)
         self.show_figure(ori,noise,out)
 
     def inpainting(self,noise, rows, cols):
         a = np.zeros((self.M,self.N))
+
         a[rows, cols] = 1
         a = a.flatten()
         image_result = np.zeros_like(noise)
@@ -43,7 +50,7 @@ class Inpaint(ROFImg):
         return image_result
 
 test = Inpaint()
-test.fname = "images/lena.bmp"
+test.fname = "./images/monalisa.png"
 
 # #### code for inpating #####
 lambdas = [1.2]
