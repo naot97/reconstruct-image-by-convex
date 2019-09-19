@@ -17,7 +17,7 @@ class Inpaint(ROFImg):
     
     def inpainting_simulate(self):
         ori = self.get_rgb(self.fname)
-        noise = self.get_text_data(ori)
+        noise = self.get_simulate_data(ori)
         #rows, cols = np.where((noise[:,:,0] == ori[:,:,0]) & (noise[:,:,1] == ori[:,:,1]) & (noise[:,:,2] == ori[:,:,2]))
         rows,cols = algorithm(5,noise)
         print(rows.shape,cols.shape)
