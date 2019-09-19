@@ -25,9 +25,9 @@ class Inpaint(ROFImg):
         self.show_figure(ori,noise,out)
 
     def inpainting(self,noise, rows, cols):
-        a = np.zeros((self.M,self.N))
+        a = np.ones((self.M,self.N))
 
-        a[rows, cols] = 1
+        a[rows, cols] = 0
         a = a.flatten()
         image_result = np.zeros_like(noise)
 
