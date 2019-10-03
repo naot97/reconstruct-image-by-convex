@@ -12,7 +12,7 @@ import matplotlib.patches as mpatches
 from imageio import imread
 import scipy.ndimage.filters as fi
 from scipy.signal import convolve2d
-from scipy.ndimage import imread
+#from scipy.ndimage import imread
 from timeit import default_timer
 from PIL import Image, ImageOps
 import scipy.io
@@ -23,13 +23,15 @@ np.random.seed(21)
 class ROFImg:
     def __init__(self):
         self.mean = 0
-        self.var = 500
+        self.var = 100
         self.sigma = self.var ** 0.5
-        self.M=512
-        self.N=512 
+        self.M=256
+        self.N=256
         self.f = list()
         self.init_size()
-
+    def setSize(m,n):
+        self.M=m
+        self.N=n
     def init_size(self):
         L = np.zeros((self.M-1, self.N))
         i,j = np.indices(L.shape)
@@ -91,7 +93,7 @@ class ROFImg:
         elif noise_type == "s&p":
             s_vs_p = 0.5
             amount = 0.004
-            out = image
+            out = image+0
             # Generate Salt '1' noise
             num_salt = np.ceil(amount * image.size * s_vs_p)
             coords = [np.random.randint(0, i - 1, int(num_salt))
@@ -126,8 +128,10 @@ class ROFImg:
         return self.get_image(self.fname)
 
     
-    def get_simulate_data(self,orig):
-        corrupted = self.noise_generator('gauss',orig)
+    def get_simulate_data(self,orig,typ):
+        #corrupted = self.noise_generator('gauss',orig)
+        corrupted = self.noise_generator(typ,orig)
+
         
         return corrupted
 
@@ -160,18 +164,28 @@ class ROFImg:
     def rgb2gray(self, img):
         return np.dot(img[...,:3], [0.2989, 0.5870, 0.1140])
 
-    def show_figure(self,ori,damaged,out):
+    def show_figure(self,ori,damaged,noise,out,out1):
         f = plt.figure()
-        f.add_subplot(1,3, 1 )
+        f.add_subplot(2,3, 1 )
         plt.title('Original')
         plt.imshow(ori)
-        f.add_subplot(1,3, 2 )
+        f.add_subplot(2,3, 2 )
         plt.title('Damaged')
         plt.imshow(damaged)
-        
-        f.add_subplot(1,3, 3)
-        plt.title('Reconstructed l = ' + str(self.l))
+
+        f.add_subplot(2,3, 3 )
+        plt.title('removedNoisy')
+        plt.imshow(noise)
+
+
+        f.add_subplot(2,3, 4 )
+        plt.title('apply algorithms')
         plt.imshow(out)
+        
+        f.add_subplot(2,3, 5)
+        plt.title('Final result l = ' + str(self.l))
+        plt.imshow(out1.astype(int))
+        #print("r", out.shape)
         plt.show(block=True)
         
     def mean_filter(self,noisy):
