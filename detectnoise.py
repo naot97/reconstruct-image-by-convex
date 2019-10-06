@@ -39,7 +39,6 @@ def caculateT1(windowsize,lef,img,cp):
                 continue
             else:
                 temp =  abs(img[lef[0]+i][lef[1]+j] - ua)
-                #print("xxx ",temp)
                 sum3 += temp*temp
                 sum2 += temp
                 
@@ -87,8 +86,9 @@ def caculateT1(windowsize,lef,img,cp):
             lst = np.sort(lst)
         #     Q1 = (lst[5]+lst[6])/2
         #     Q3 = (lst[18]+lst[19])/2
-            Q1 = (lst[1]+lst[2])/2
-            Q3 = (lst[7]+lst[8])/2
+            N = (windowsize*windowsize -1)
+            Q1 = lst[int((N + 1)/4)]
+            Q3 = lst[int((3*N +3)/4)]
 
         #     #print("lst",np.sort(lst))
             if cp>=Q3 or cp<=Q1: 
@@ -210,22 +210,4 @@ if __name__ == "__main__":
      [13,14,15,16]]
     
     ])    
-    print('Shape cat.png:', img.shape)
-
-
-    #new_img = apply_on_3_channels(img)'
-    #new_img = algorithm(5,A)
-    
-    #imwrite('./images/test_saved.jpg', new_img)
-    #print("a",A[1][0])
-    #print('Shape mona_new.png:', new_img.shape)
-    print('Saved new image @ mona_new.png')
-
-    #print('------------')
-    
-    #lighten_blur_img = apply_sliding_window_on_3_channels(img, kernel=[[0.33, 0.33, 0.33], [0.33, 0.33, 0.33], [0.33, 0.33, 0.33]], padding=1, stride=1)
-    #imwrite('./images/monalisa_lighten_blur.png', lighten_blur_img)
-    #print('Shape mona.png:', img.shape)
-    #print('Shape mona_lighten_blur.png:', lighten_blur_img.shape)
-    #print('Saved new image @ mona_lighten_blur.png')
 

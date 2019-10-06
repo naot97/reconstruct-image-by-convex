@@ -3,8 +3,8 @@ import scipy.optimize as optimize
 import scipy.sparse as sparse
 import scipy.linalg as linalg
 from timeit import default_timer
-from utils import ROFImg
 from detectnoise import *
+from utils import ROFImg
 
 class Inpaint(ROFImg):
     def __init__(self):
@@ -15,49 +15,54 @@ class Inpaint(ROFImg):
 
     def inpainting_smoothed_sq_grad(self,x,a, b, l=0.5):
         return 2*(0.5*a*l*(x - b) + (self.Dx.T.dot(self.Dx.dot(x)) + self.Dy.T.dot(self.Dy.dot(x))))
-    
+    def denoise_smoothed_sq(self, x, b, l=1.1):
+        return 0.5*linalg.norm(b - x)**2 + l*(linalg.norm(self.Dx.dot(x))**2 + linalg.norm(self.Dy.dot(x))**2)
+
+    def denoise_smoothed_sq_grad(self, x, b, l=1.1):
+        return 2*(0.5*(x - b) + l*(self.Dx.T.dot(self.Dx.dot(x)) + self.Dy.T.dot(self.Dy.dot(x))))
+    def denoising_rgb(self,noise):
+        start = default_timer()
+        out = np.zeros_like(noise)
+        for i in range(3):
+            b = noise[:,:,i].flatten()
+            l = self.l
+            optim_output = optimize.minimize(lambda x: self.denoise_smoothed_sq(x,b,l),
+                                    np.zeros(self.M * self.N),
+                                    method='L-BFGS-B',
+                                    jac=lambda x: self.denoise_smoothed_sq_grad(x,b,l),
+                                    options={'disp':True,'ftol' : 1e-30, 'maxiter' : 150 },callback=lambda xk : self.f.append(self.denoise_smoothed_sq(xk,b,l)))
+
+            out[:,:,i] = np.rot90(optim_output['x'].reshape((self.M,self.N)),4)
+        return out,default_timer()-start
     def inpainting_simulate(self):
+        #ori = self.get_rgb('./images/clean.bmp')
         ori = self.get_rgb(self.fname)
-        #self.setSize(ori.shape[0][0],ori.shape[0][1])
-        print(ori.shape)
-        #self.M = ori.shape[0]
-        #self.N = ori.shape[1]
-
-        damaged = self.get_simulate_data(ori,"gauss")
-        print('damaged', damaged.shape)
-
-        #noise = ori + 0
-        #mean = 0.0   # some constant
-        #std = 1.0    # some constant (standard deviation)
-        #noise = ori + np.random.normal(mean, std, ori.shape)
-        #noise = np.clip(noise, 0, 255)  
-        #rows, cols = np.where((damaged[:,:,0] == ori[:,:,0]) & (damaged[:,:,1] == ori[:,:,1]) & (damaged[:,:,2] == ori[:,:,2]))
+        damaged = self.get_simulate_data(ori,"s&p")
+        #damaged = self.get_rgb('./images/noisy.bmp')
         rows0,cols0,rows1,cols1,rows2,cols2 = algorithm(3,damaged)
-
         
-        #rows0=cols0=rows1=cols1=rows2=cols2 = np.array([])
-        #print(rows.shape,cols.shape)
-        out = self.inpainting(damaged,rows0,cols0,rows1,cols1,rows2,cols2)
-        #out= ori         
-        print('damaged', damaged.shape)
-        print('out', out.shape)
-
-
-
+        out,t = self.denoising_rgb(damaged)
 
         noisy = damaged + 0
         noisy = damaged.astype(int)
         noisy[rows0, cols0,:] = 0
-        #noisy[rows1, cols1,:] = 0
-        #noisy[rows2, cols2,:] = 0
-        out1=out.copy()
-        out1[rows0, cols0,:]= ori[rows0, cols0,:]
+        # convex
 
-    
-
-        print(self.eval_mse(ori,damaged))
-        print(self.eval_mse(ori,out))
-        print(self.eval_mse(ori,out1))
+        out1=damaged.copy()
+        out1[rows0, cols0,:]= out[rows0, cols0,:]
+        out1[rows1, cols1,:]= out[rows1, cols1,:]
+        out1[rows2, cols2,:]= out[rows2, cols2,:]
+        # median
+        median,t = self.median_filter(damaged,3)
+        median1=damaged.copy()
+        median1[rows0, cols0,:]= median[rows0, cols0,:]
+        median1[rows1, cols1,:]= median[rows1, cols1,:]
+        median1[rows2, cols2,:]= median[rows2, cols2,:]
+        print('noisy :',self.eval_mse(ori,damaged))
+        print('median filter  :',self.eval_mse(ori,median))
+        print('median filter + detect noise :', self.eval_mse(ori, median1) )
+        print('convex :',self.eval_mse(ori,out))
+        print('convex + detect noisy :',self.eval_mse(ori,out1))
         self.show_figure(ori,damaged,noisy,out,out1)
 
     def inpainting(self,noise, rows0, cols0, rows1, cols1, rows2, cols2):
@@ -114,10 +119,7 @@ lambdas = [1.2]
 f = list()
 tt=0
 for l in lambdas:
-    tt+=1
     test.l = l
     test.inpainting_simulate()
     f.append(test.f)
     test.f = list()
-#test.graph(f[0],f[1],f[2],lambdas[0],lambdas[1],lambdas[2])
-print("##",tt)

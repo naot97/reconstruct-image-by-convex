@@ -1,4 +1,4 @@
-import numpy as np
+﻿import numpy as np
 import cv2
 import argparse
 import math
@@ -29,7 +29,7 @@ class ROFImg:
         self.N=256
         self.f = list()
         self.init_size()
-    def setSize(m,n):
+    def setSize(self,m,n):
         self.M=m
         self.N=n
     def init_size(self):
@@ -58,26 +58,27 @@ class ROFImg:
         temp = []
         indexer = filter_size // 2
         data_final = []
-        data_final = np.zeros((len(data),len(data[0])))
+        data_final = np.zeros_like(data)
         for i in range(len(data)):
-
             for j in range(len(data[0])):
-
-                for z in range(filter_size):
-                    if i + z - indexer < 0 or i + z - indexer > len(data) - 1:
-                        for c in range(filter_size):
-                            temp.append(0)
-                    else:
-                        if j + z - indexer < 0 or j + indexer > len(data[0]) - 1:
-                            temp.append(0)
+                for k in range(len(data[0][0])):
+                    for z in range(filter_size):
+                        if i + z - indexer < 0 or i + z - indexer > len(data) - 1:
+                            for c in range(filter_size):
+                                temp.append(0)
                         else:
-                            for k in range(filter_size):
-                                temp.append(data[i + z - indexer][j + k - indexer])
+                            if j + z - indexer < 0 or j + indexer > len(data[0]) - 1:
+                                temp.append(0)
+                            else:
+                                for d in range(filter_size):
+                                    temp.append(data[i + z - indexer][j + d - indexer][k])
 
-                temp.sort()
-                data_final[i][j] = temp[len(temp) // 2]
-                temp = []
-        return data_final,default_timer() - start
+                    temp.sort()
+                    data_final[i][j][k] = temp[len(temp) // 2]
+                    temp = []
+
+        print(data_final.shape)           
+        return data_final.astype('int'),default_timer() - start
 
     def gaussian_kernel(self,k_len = 5, sigma = 3):
         d_mat = np.zeros((k_len, k_len))
@@ -191,7 +192,7 @@ class ROFImg:
     def mean_filter(self,noisy):
         start = default_timer()
         kernel = np.ones((3,3),np.float32)/9
-        processed_image = cv2.filter2D(noisy,-1,kernel)
+        processed_image = cv2.filter2D(noisy,-1,kernel).astype('int')
         return processed_image,default_timer()-start
 
     def eval_pnsr(self,mse):
