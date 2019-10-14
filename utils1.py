@@ -1,4 +1,4 @@
-﻿import numpy as np
+import numpy as np
 import cv2
 import argparse
 import math
@@ -23,13 +23,13 @@ np.random.seed(21)
 class ROFImg:
     def __init__(self):
         self.mean = 0
-        self.var = 200
+        self.var = 100
         self.sigma = self.var ** 0.5
         self.M=256
         self.N=256
         self.f = list()
         self.init_size()
-    def setSize(self,m,n):
+    def setSize(m,n):
         self.M=m
         self.N=n
     def init_size(self):
@@ -58,27 +58,26 @@ class ROFImg:
         temp = []
         indexer = filter_size // 2
         data_final = []
-        data_final = np.zeros_like(data)
+        data_final = np.zeros((len(data),len(data[0])))
         for i in range(len(data)):
+
             for j in range(len(data[0])):
-                for k in range(len(data[0][0])):
-                    for z in range(filter_size):
-                        if i + z - indexer < 0 or i + z - indexer > len(data) - 1:
-                            for c in range(filter_size):
-                                temp.append(0)
+
+                for z in range(filter_size):
+                    if i + z - indexer < 0 or i + z - indexer > len(data) - 1:
+                        for c in range(filter_size):
+                            temp.append(0)
+                    else:
+                        if j + z - indexer < 0 or j + indexer > len(data[0]) - 1:
+                            temp.append(0)
                         else:
-                            if j + z - indexer < 0 or j + indexer > len(data[0]) - 1:
-                                temp.append(0)
-                            else:
-                                for d in range(filter_size):
-                                    temp.append(data[i + z - indexer][j + d - indexer][k])
+                            for k in range(filter_size):
+                                temp.append(data[i + z - indexer][j + k - indexer])
 
-                    temp.sort()
-                    data_final[i][j][k] = temp[len(temp) // 2]
-                    temp = []
-
-        print(data_final.shape)           
-        return data_final.astype('int'),default_timer() - start
+                temp.sort()
+                data_final[i][j] = temp[len(temp) // 2]
+                temp = []
+        return data_final,default_timer() - start
 
     def gaussian_kernel(self,k_len = 5, sigma = 3):
         d_mat = np.zeros((k_len, k_len))
@@ -93,7 +92,7 @@ class ROFImg:
             return noisy.astype(int)
         elif noise_type == "s&p":
             s_vs_p = 0.5
-            amount = 0.01
+            amount = 0.004
             out = image+0
             # Generate Salt '1' noise
             num_salt = np.ceil(amount * image.size * s_vs_p)
@@ -165,38 +164,26 @@ class ROFImg:
     def rgb2gray(self, img):
         return np.dot(img[...,:3], [0.2989, 0.5870, 0.1140])
 
-    def show_figure(self,ori,damaged,noise,out_without,out1,out2,median,median1):
+    def show_figure(self,ori,damaged,noise,out,out1):
         f = plt.figure()
-        f.add_subplot(2,4, 1 )
+        f.add_subplot(2,3, 1 )
         plt.title('Original')
         plt.imshow(ori)
-        f.add_subplot(2,4, 2 )
+        f.add_subplot(2,3, 2 )
         plt.title('Damaged')
         plt.imshow(damaged)
 
-        f.add_subplot(2,4, 3 )
-        plt.title('Noisy')
+        f.add_subplot(2,3, 3 )
+        plt.title('removedNoisy')
         plt.imshow(noise)
 
 
-        f.add_subplot(2,4, 6 )
-        plt.title('convex without detect')
-        plt.imshow(out_without)
-
-        f.add_subplot(2,4, 7 )
-        plt.title('convex + detect')
-        plt.imshow(out2)
-
-        f.add_subplot(2,4, 4 )
-        plt.title('median')
-        plt.imshow(median)
-
-        f.add_subplot(2,4, 5 )
-        plt.title('median + detect')
-        plt.imshow(median1)
+        f.add_subplot(2,3, 4 )
+        plt.title('apply algorithms')
+        plt.imshow(out)
         
-        f.add_subplot(2,4, 8)
-        plt.title('convex + detect plus')
+        f.add_subplot(2,3, 5)
+        plt.title('Final result l = ' + str(self.l))
         plt.imshow(out1.astype(int))
         #print("r", out.shape)
         plt.show(block=True)
@@ -204,7 +191,7 @@ class ROFImg:
     def mean_filter(self,noisy):
         start = default_timer()
         kernel = np.ones((3,3),np.float32)/9
-        processed_image = cv2.filter2D(noisy,-1,kernel).astype('int')
+        processed_image = cv2.filter2D(noisy,-1,kernel)
         return processed_image,default_timer()-start
 
     def eval_pnsr(self,mse):

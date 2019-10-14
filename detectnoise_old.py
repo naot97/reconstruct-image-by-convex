@@ -6,51 +6,6 @@ from imageio import imread,imwrite
 #def caculateUa(central,img):
 m = 40
 
-def detect(im,lef,windowsize):
-    n = int(windowsize/2)
-    cent=(n,n)
-
-    #chuyen 2 chieu thanh 1 chieu
-    arr = im[ lef[0]:lef[0] + windowsize ,lef[1]:lef[1] + windowsize ]
-    cp = arr[cent[0], cent[1]]
-    arr = arr.flatten()
-    arr = np.delete(arr,n * windowsize + n,0)
-
-
-    #tinh mean_a, sigma_a, mean_q
-    ua = np.mean(arr)
-    sa = np.std(arr)
-    p = abs(arr - ua)
-    up = np.mean(p)
-    sp = np.std(p)
-
-
-    NS = np.mean(abs(arr - cp))
-
-    #dieu kien 1
-    T1 = up + sp
-    if (NS >= T1):
-        return False
-
-
-    #dieu kien 2
-    T2max = ua + 0.5 * sa
-    T2min = ua - 0.5 * sa
-
-    if (cp >= T2max or cp <= T2min):
-        return False
-
-    #dieu kien 3
-    arr.sort()
-    l  = windowsize*windowsize - 1
-    Q1 = arr[int((l + 1)/4)]
-    Q3 = arr[int((3*l +3)/4)]
-
-    if cp>=Q3 or cp<=Q1:
-        return False
-
-    return True
-
 def caculateT1(matrix,windowsize,lef,img,cp):
     n=int(windowsize/2)
     sum1 = 0
@@ -104,24 +59,24 @@ def caculateT1(matrix,windowsize,lef,img,cp):
     sp=np.sqrt(sum4/N)
 
     T1=up+sp
-    if NS>=T1 :
+    if NS>T1 :
         return False
 
-    T2max = ua + 0.5 * sa
-    T2min = ua - 0.5 * sa
-    if cp<=T2min or cp>=T2max:
+    T2max = ua + 2.5 * sa
+    T2min = ua - 2.5 * sa
+    if cp<T2min and cp>T2max:
         return False
 
     lst.sort()
     Q1 = lst[int((N + 1)/4)]
     Q3 = lst[int((3*N +3)/4)]
 
-    if cp>=Q3 or cp<=Q1:
+    if cp>Q3 and cp<Q1: 
         return False
-
     return True
 
 
+#     return False
     
     
 def algorithm(windowsize,img):          
@@ -134,7 +89,9 @@ def algorithm(windowsize,img):
     print("w",w)
     print("n",n)
 
-    sumOK = 0
+    sumnoise0=0
+    sumnoise1=0
+    sumnoise2=0
 
     rows = np.array([])
     cols =  np.array([])
@@ -146,25 +103,32 @@ def algorithm(windowsize,img):
 
     for i in range(h-windowsize+1):
         for j in range(w-windowsize+1):
+    
+    #for i in range(h):
+    #    for j in range(w):
             cp1=int(i + int(windowsize/2))
             cp2=int(j + int(windowsize/2))
             x= (img[cp1,cp2,0] >= 0) and img[cp1,cp2,1]>=0 and img[cp1,cp2,2]>=0 
             y= img[cp1,cp2,0] <= 255 and img[cp1,cp2,1]<= 255 and img[cp1,cp2,2]<= 255
 
             if  x and y :
-                #if caculateT1(matrix,windowsize,(i,j),img[:,:,0],img[cp1,cp2,0]) and caculateT1(matrix,windowsize,(i,j),img[:,:,1],img[cp1,cp2,1]) and caculateT1(matrix,windowsize,(i,j),img[:,:,2],img[cp1,cp2,2]) : 
-                if detect(img[:,:,0], (i,j), windowsize) and detect(img[:,:,1], (i,j), windowsize) and detect(img[:,:,2], (i,j), windowsize): 
-                    sumOK+=1
+                if caculateT1(matrix,windowsize,(i,j),img[:,:,0],img[cp1,cp2,0]) and caculateT1(matrix,windowsize,(i,j),img[:,:,1],img[cp1,cp2,1]) and caculateT1(matrix,windowsize,(i,j),img[:,:,2],img[cp1,cp2,2]) : 
+                    sumnoise0+=1
+
+                    #rows= np.append(rows,[int(i + int(windowsize/2))])
+                    #cols= np.append(cols,[int(j + int(windowsize/2))])
                 else :
-                    rows0= np.append(rows0,[cp1])
-                    cols0= np.append(cols0,[cp2])
+                    rows0= np.append(rows0,[int(i + int(windowsize/2))])
+                    cols0= np.append(cols0,[int(j + int(windowsize/2))])
                     
 
                     
-    rate0 = sumOK/(h*w)
+    rate0 = sumnoise0/(h*w)
     print("noise rate : ",1-rate0)
 
-    return rows0.astype(int),cols0.astype(int) 
+    #print(img)
+    #print(img)
+    return rows0.astype(int),cols0.astype(int) #,  rows2.astype(int),cols2.astype(int)
     			
             
 
@@ -176,7 +140,7 @@ def apply_on_3_channels(img):
     return img
 
 if __name__ == "__main__":
-    img = imread("./images/lana.jpg")
+    img = imread("./images/test2.jpg")
     A = np.array([
     [[1,2,3,4], 
      [5,6,7,8],
@@ -192,7 +156,22 @@ if __name__ == "__main__":
      [13,14,15,16]]
     
     ])    
-    print('Shape cat.png:', img)
+    print('Shape cat.png:', img.shape)
 
 
+    #new_img = apply_on_3_channels(img)'
+    #new_img = algorithm(5,A)
+    
+    #imwrite('./images/test_saved.jpg', new_img)
+    #print("a",A[1][0])
+    #print('Shape mona_new.png:', new_img.shape)
+    print('Saved new image @ mona_new.png')
+
+    #print('------------')
+    
+    #lighten_blur_img = apply_sliding_window_on_3_channels(img, kernel=[[0.33, 0.33, 0.33], [0.33, 0.33, 0.33], [0.33, 0.33, 0.33]], padding=1, stride=1)
+    #imwrite('./images/monalisa_lighten_blur.png', lighten_blur_img)
+    #print('Shape mona.png:', img.shape)
+    #print('Shape mona_lighten_blur.png:', lighten_blur_img.shape)
+    #print('Saved new image @ mona_lighten_blur.png')
 

@@ -10,21 +10,24 @@ class Denoise(ROFImg):
     def __init__(self):
         ROFImg.__init__(self)
     def denoise_smoothed_sq(self, x, b, l=1.1):
-        return 0.5*linalg.norm(b - x)**2 + l*(linalg.norm(self.Dx.dot(x))**2 + linalg.norm(self.Dy.dot(x))**2)
+        return 0.5*l*linalg.norm(b - x)**2 + (linalg.norm(self.Dx.dot(x))**2 + linalg.norm(self.Dy.dot(x))**2)
 
     def denoise_smoothed_sq_grad(self, x, b, l=1.1):
-        return 2*(0.5*(x - b) + l*(self.Dx.T.dot(self.Dx.dot(x)) + self.Dy.T.dot(self.Dy.dot(x))))
+        return 2*(0.5*l*(x - b) + (self.Dx.T.dot(self.Dx.dot(x)) + self.Dy.T.dot(self.Dy.dot(x))))
 
     def denoising(self, noise ):
         start = default_timer()
         noise = np.rot90(noise,4)
         b = noise.flatten()
+        self.l = 1.2
         l = self.l
         optim_output = optimize.minimize(lambda x: self.denoise_smoothed_sq(x,b,l),
                                     np.zeros(self.M * self.N),
                                     method='L-BFGS-B',
                                     jac=lambda x: self.denoise_smoothed_sq_grad(x,b,l),
-                                    options={'disp':True,'ftol' : 1e-30 },callback=lambda xk : self.f.append(self.denoise_smoothed_sq(xk,b,l)))
+                                    options={'disp':True,'ftol' : 1e-30 }
+                                    ,#callback=lambda xk : self.f.append(self.denoise_smoothed_sq(xk,b,l))
+                                    )
 
         out = np.rot90(optim_output['x'].reshape((self.M,self.N)),4)
         
@@ -35,11 +38,11 @@ class Denoise(ROFImg):
         #noise = self.get_simulate_data(ori)
         #out,t1 = self.denoising(noise)
         ori = self.get_rgb(self.fname)
-        noise = self.get_simulate_data(ori)
+        noise = self.get_simulate_data(ori,"gauss")
         out,t1 = self.denoising_rgb(noise)
         print('mse noisy :', self.eval_mse(ori,noise))
         print('mse denoising :', self.eval_mse(ori,out))
-        self.show_figure(ori,noise,out.astype(int))
+        self.show_figure(ori,noise,out.astype(int),noise,noise)
         
     def denoising_rgb(self,noise):
         start = default_timer()
@@ -51,7 +54,9 @@ class Denoise(ROFImg):
                                     np.zeros(self.M * self.N),
                                     method='L-BFGS-B',
                                     jac=lambda x: self.denoise_smoothed_sq_grad(x,b,l),
-                                    options={'disp':True,'ftol' : 1e-30, 'maxiter' : 150 },callback=lambda xk : self.f.append(self.denoise_smoothed_sq(xk,b,l)))
+                                    options={'disp':True,'ftol' : 1e-30, 'maxiter' : 150 }
+                                    #,callback=lambda xk : self.f.append(self.denoise_smoothed_sq(xk,b,l))
+                                    )
 
             out[:,:,i] = np.rot90(optim_output['x'].reshape((self.M,self.N)),4)
         
@@ -129,7 +134,7 @@ class Denoise(ROFImg):
         self.show_figure(ori,noisy,out)
 
 test = Denoise()
-test.fname = "images/lena.bmp"
+test.fname = "images/lana.jpg"
 
 ##### code for denoise #####
 lambdas = [1.2]

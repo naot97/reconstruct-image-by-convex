@@ -70,7 +70,7 @@ class Inpaint(ROFImg):
                                     np.zeros(self.M * self.N),
                                     method='L-BFGS-B',
                                     jac=lambda x: self.inpainting_smoothed_sq_grad(x,a,b,l),
-                                    options={'disp':True, 'ftol' : 1e-30},callback= lambda xk : self.f.append(self.inpainting_smoothed_sq(xk,a,b,l)[0]))
+                                    options={'disp':True, 'ftol' : 1e-35},callback= lambda xk : self.f.append(self.inpainting_smoothed_sq(xk,a,b,l)[0]))
 
             image_smooth = optim_output['x']
             image_result[:,:,i] = image_smooth.reshape((self.N,)*2)
