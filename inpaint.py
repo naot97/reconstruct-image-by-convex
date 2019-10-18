@@ -77,6 +77,7 @@ class Inpaint(ROFImg):
 
 
         rows0,cols0 = algorithm(3,damaged)
+        print(rows0[:256])
 
         out = self.inpainting(damaged,rows0,cols0)
         out2= self.denoising(damaged)

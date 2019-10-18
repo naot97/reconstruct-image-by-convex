@@ -148,16 +148,16 @@ def algorithm(windowsize,img):
         for j in range(w-windowsize+1):
             cp1=int(i + int(windowsize/2))
             cp2=int(j + int(windowsize/2))
-            x= (img[cp1,cp2,0] >= 0) and img[cp1,cp2,1]>=0 and img[cp1,cp2,2]>=0 
-            y= img[cp1,cp2,0] <= 255 and img[cp1,cp2,1]<= 255 and img[cp1,cp2,2]<= 255
+            #x= (img[cp1,cp2,0] >= 0) and img[cp1,cp2,1]>=0 and img[cp1,cp2,2]>=0 
+            #y= img[cp1,cp2,0] <= 255 and img[cp1,cp2,1]<= 255 and img[cp1,cp2,2]<= 255
 
-            if  x and y :
-                #if caculateT1(matrix,windowsize,(i,j),img[:,:,0],img[cp1,cp2,0]) and caculateT1(matrix,windowsize,(i,j),img[:,:,1],img[cp1,cp2,1]) and caculateT1(matrix,windowsize,(i,j),img[:,:,2],img[cp1,cp2,2]) : 
-                if detect(img[:,:,0], (i,j), windowsize) and detect(img[:,:,1], (i,j), windowsize) and detect(img[:,:,2], (i,j), windowsize): 
-                    sumOK+=1
-                else :
-                    rows0= np.append(rows0,[cp1])
-                    cols0= np.append(cols0,[cp2])
+            #if  x and y :
+            #if caculateT1(matrix,windowsize,(i,j),img[:,:,0],img[cp1,cp2,0]) and caculateT1(matrix,windowsize,(i,j),img[:,:,1],img[cp1,cp2,1]) and caculateT1(matrix,windowsize,(i,j),img[:,:,2],img[cp1,cp2,2]) : 
+            if detect(img[:,:,0], (i,j), windowsize) and detect(img[:,:,1], (i,j), windowsize) and detect(img[:,:,2], (i,j), windowsize): 
+                sumOK+=1
+            else :
+                rows0= np.append(rows0,[cp1])
+                cols0= np.append(cols0,[cp2])
                     
 
                     
