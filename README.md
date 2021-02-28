@@ -11,4 +11,4 @@ Use total variation method to create convex models for denoising, debluring, inp
 * Type ```python inpaint.py``` in cmd or terminal to inpainting.
 ### Testing
 * folder ```denoising_benchmark_data``` consists data to benchmark for denoisinng.
-* function ```denoising_real``` in file ```denoise.py``` is used to benchmark this method with mean filter, median filter and threshold in Fourier domain.
+* function ```denoising_real()``` in file ```denoise.py``` is used to benchmark this method with mean filter, median filter and threshold in Fourier domain.
